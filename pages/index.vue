@@ -4,14 +4,14 @@
 
     <v-app-bar color="primary" dark app>
       <v-toolbar-title>マルチステップアンケートの実装テスト</v-toolbar-title>
+      <v-spacer></v-spacer>
+      <v-app-bar-nav-icon @click="drawer=!drawer"></v-app-bar-nav-icon>
     </v-app-bar>
 
     <v-main>
       <v-container>
-
         {{message}}
         <Form></Form>
-
       </v-container>
     </v-main>
   </v-app>

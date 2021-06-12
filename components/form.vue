@@ -34,47 +34,41 @@
 
       <!--ここから質問1-->
       <v-stepper-content step="1">
-<!--        <v-card-->
-<!--          class="mb-12"-->
-<!--          color="grey lighten-1"-->
-<!--          height="200px"-->
-<!--        >-->
-<!--          ここに入力情報がくるよん-->
-<!--        </v-card>-->
-        <v-form v-model="valid">
-          <v-container>
+        <v-form>
+          <v-container fluid>
             <v-row>
               <v-col
-              cols="12"
-              md="6"
+                cols="12"
+                md="6"
               >
                 <v-text-field
-                v-model="firstname"
-                :rules="nameRules"
-                :counter="10"
-                label="姓"
-                required
+                  v-model="form.first"
+                  :rules="nameRules"
+                  :counter="10"
+                  label="姓"
+                  required
                 ></v-text-field>
               </v-col>
 
               <v-col
-              cols="12"
-              md="6">
+                cols="12"
+                md="6">
                 <v-text-field
-                v-model ="lastname"
-                :rules="nameRules"
-                :counter="10"
-                label="名"
-                required
+                  v-model="form.last"
+                  :rules="nameRules"
+                  :counter="10"
+                  label="名"
+                  required
                 ></v-text-field>
               </v-col>
 
               <v-col
-              cols="12"
-              md="6"
+                cols="12"
+                md="6"
               >
                 <v-text-field
-                  v-model="email"
+                  v-model="form.email"
+                  :rules="emailRules"
                   label="メールアドレス"
                   required
                 >
@@ -83,27 +77,24 @@
               </v-col>
 
               <v-col
-              cols="12"
-              md="6"
+                cols="12"
+                md="6"
               >
                 <v-text-field
-                  v-model="phoneNumber"
-                  :counter="7"
+                  v-model="form.phoneNumber"
                   label="電話番号"
                 >
-
                 </v-text-field>
-
               </v-col>
-
             </v-row>
-
           </v-container>
         </v-form>
 
         <v-btn
+          :disabled="!valid"
           color="primary"
-          @click="e1=2"
+          class="mr-4"
+          @click="e1=2,validate"
         >
           次に進む
         </v-btn>
@@ -111,11 +102,79 @@
 
       <!--ここから質問2-->
       <v-stepper-content step="2">
-        <v-card
-          class="mb-12"
-          color="grey lighten-1"
-          height="200px"
-        ></v-card>
+        <v-form>
+          <v-container>
+            <v-row>
+              <v-col
+                cols="12"
+                md="6"
+              >
+                <v-menu
+                  ref="menu"
+                  v-model="menu"
+                  :close-on-content-click="false"
+                  :return-value.sync="date"
+                  transition="scale-transition"
+                  offset-y
+                  min-width="auto"
+                >
+                  <template v-slot:activator="{on,attrs}">
+                    <v-text-field
+                      v-model="date"
+                      label="第一希望日時"
+                      prepend-icon="mdi-calendar"
+                      readonly
+                      v-on="on"
+                    ></v-text-field>
+                  </template>
+                  <v-date-picker
+                    v-model="date"
+                    no-title
+                    scrollable
+                  >
+                    <v-spacer></v-spacer>
+                    <v-btn
+                      text
+                      color="primary"
+                      @click="menu=false"
+                    >キャンセル
+                    </v-btn>
+                    <v-btn
+                      text
+                      color="primary"
+                      @click="$refs.menu.save(date)"
+                    >OK
+                    </v-btn>
+                  </v-date-picker>
+
+
+                </v-menu>
+
+              </v-col>
+
+              <v-col
+                cols="12"
+              >
+                <v-textarea
+                  v-model="form.bio"
+                  color="teal"
+                >
+                  <template v-slot:label>
+                    <div>
+                      ご希望がございましたらお書きください<small>※任意</small>
+                    </div>
+                  </template>
+
+                </v-textarea>
+
+              </v-col>
+
+
+            </v-row>
+          </v-container>
+
+        </v-form>
+
 
         <v-btn
           color="primary"
@@ -132,15 +191,17 @@
 
       <!--ここから質問3-->
       <v-stepper-content step="3">
-<!--        <v-card-->
-<!--          class="mb-12"-->
-<!--          color="grey lighten-1"-->
-<!--          height="200px"-->
-<!--        >-->
-        入力情報のご確認
-          姓：{{firstname}}
-          名：{{lastname}}
-<!--        </v-card>-->
+        <!--        <v-card-->
+        <!--          class="mb-12"-->
+        <!--          color="grey lighten-1"-->
+        <!--          height="200px"-->
+        <!--        >-->
+        <h1>入力情報のご確認</h1>
+        姓：{{ form.first }}
+        名：{{ form.last }}
+        メールアドレス：{{ form.email }}}
+        電話番号：{{ form.phoneNumber }}
+        <!--        </v-card>-->
         <br>
         <v-btn
           color="primary"
@@ -171,28 +232,43 @@
 export default {
   name: "Form",
   data() {
-    return {
-      e1: 1,
-      valid:false,
-      firstname:'',
-      lastname:'',
+
+    // 入力値を格納
+    const defaultForm = Object.freeze({
+      first: '',
+      last: '',
       email: '',
-      phoneNumber:'',
+      phoneNumber: '',
+      bio: '',
 
+    })
 
-      nameRules:[
+    return {
+      form: Object.assign({}, defaultForm),
+      e1: 1,
+      valid: true,
+
+      date: new Date().toISOString().substr(0, 10),
+      menu: false,
+      modal: false,
+      menu2: false,
+
+      nameRules: [
         v => !!v || '入力してください',
-        v => (v && v.length<=10) ||'お前はネコマムシに近い存在だ！'
+        v => (v && v.length <= 10) || 'お前はネコマムシに近い存在だ！'
       ],
 
-      emailRules:[
+      emailRules: [
         v => !!v || '入力してください',
         v => /.+@.+\..+/.test(v) || '正しくメール打たないとマムシになるよ？'
       ]
-
-
     }
   },
+  methods: {
+    validate() {
+      this.$refs.form.validate()
+    }
+  }
 }
 </script>
 
